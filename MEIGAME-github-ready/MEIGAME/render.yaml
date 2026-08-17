@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: meigame-api
+    runtime: node
+    rootDir: server
+    buildCommand: npm install && npm run db:generate && npm run build
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: PORT
+        value: "4000"

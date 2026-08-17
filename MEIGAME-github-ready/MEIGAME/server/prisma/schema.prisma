@@ -1,0 +1,202 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  STAFF
+  USER
+  PARTICIPANT
+}
+
+enum Permission {
+  CREATE_QUIZ
+  EDIT_QUIZ
+  DELETE_QUIZ
+  START_QUIZ
+  END_QUIZ
+  VIEW_RESULTS
+  VIEW_ANALYTICS
+}
+
+enum QuizStatus {
+  DRAFT
+  PUBLISHED
+  LIVE
+  ENDED
+  ARCHIVED
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+}
+
+model User {
+  id             String          @id @default(cuid())
+  fullName       String
+  username       String          @unique
+  passwordHash   String
+  collegeId      String?
+  department     String?
+  year           String?
+  section        String?
+  email          String?
+  phone          String?
+  profilePhoto   String?
+  role           Role            @default(USER)
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  lastLoginAt    DateTime?
+  quizzes        Quiz[]          @relation("QuizCreator")
+  permissions    UserPermission[]
+  activityLogs   ActivityLog[]
+}
+
+model UserPermission {
+  id         String     @id @default(cuid())
+  userId     String
+  permission Permission
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, permission])
+}
+
+model Quiz {
+  id                String       @id @default(cuid())
+  title             String
+  description       String?
+  subject           String
+  department        String?
+  year              String?
+  difficulty        String       @default("MEDIUM")
+  status            QuizStatus   @default(DRAFT)
+  joinCode          String       @unique
+  createdById       String
+  startTime         DateTime?
+  endTime           DateTime?
+  timeLimit         Int?
+  resultVisibility  String       @default("AFTER_COMPLETION")
+  leaderboardEnabled Boolean      @default(true)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  createdBy         User         @relation("QuizCreator", fields: [createdById], references: [id])
+  questions         Question[]
+  sessions          QuizSession[]
+  results           QuizResult[]
+  setting           QuizSetting?
+}
+
+model Question {
+  id           String        @id @default(cuid())
+  quizId       String
+  questionText String
+  questionType QuestionType  @default(MULTIPLE_CHOICE)
+  points       Int           @default(10)
+  timeLimit    Int?
+  explanation  String?
+  order        Int
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  quiz         Quiz          @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options      QuestionOption[]
+  answers      Answer[]
+  @@unique([quizId, order])
+}
+
+model QuestionOption {
+  id          String    @id @default(cuid())
+  questionId  String
+  optionText  String
+  isCorrect   Boolean   @default(false)
+  order       Int
+  question    Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedBy  Answer[]
+  @@unique([questionId, order])
+}
+
+model QuizSession {
+  id          String        @id @default(cuid())
+  quizId      String
+  startedAt   DateTime?
+  endedAt     DateTime?
+  createdAt   DateTime      @default(now())
+  quiz        Quiz          @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  participants Participant[]
+}
+
+model Participant {
+  id           String       @id @default(cuid())
+  quizId       String
+  sessionId    String
+  name         String
+  collegeId    String?
+  joinedAt     DateTime     @default(now())
+  completedAt  DateTime?
+  quiz         Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  session      QuizSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  answers      Answer[]
+  result       QuizResult?
+  @@index([quizId])
+}
+
+model Answer {
+  id               String          @id @default(cuid())
+  participantId    String
+  questionId       String
+  selectedOptionId String
+  isCorrect        Boolean
+  pointsEarned     Int
+  responseTime     Int
+  submittedAt      DateTime        @default(now())
+  participant      Participant    @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  question         Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption   QuestionOption @relation(fields: [selectedOptionId], references: [id])
+  @@unique([participantId, questionId])
+}
+
+model QuizResult {
+  id              String      @id @default(cuid())
+  participantId   String      @unique
+  quizId          String
+  score           Int
+  totalPoints     Int
+  correctAnswers  Int
+  incorrectAnswers Int
+  accuracy        Float
+  timeTaken       Int
+  rank            Int?
+  createdAt       DateTime    @default(now())
+  participant     Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  quiz            Quiz        @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  @@index([quizId, score])
+}
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  targetType String?
+  targetId   String?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  @@index([createdAt])
+}
+
+model QuizSetting {
+  id                   String  @id @default(cuid())
+  quizId               String  @unique
+  allowLateJoin        Boolean @default(false)
+  randomizeQuestions   Boolean @default(false)
+  randomizeOptions     Boolean @default(false)
+  showCorrectAfterAnswer Boolean @default(false)
+  quiz                 Quiz    @relation(fields: [quizId], references: [id], onDelete: Cascade)
+}
