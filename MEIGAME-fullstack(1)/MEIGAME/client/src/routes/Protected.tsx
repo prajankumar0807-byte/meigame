@@ -1,0 +1,1 @@
+import {Navigate,Outlet} from 'react-router-dom'; import {useAuth} from '../lib/auth'; import {Spinner} from '../components/UI'; export function Protected(){const {user,loading}=useAuth();if(loading)return <div className="center"><Spinner/></div>;return user?<Outlet/>:<Navigate to="/login" replace/>}
