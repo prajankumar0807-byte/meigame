@@ -1,4 +1,0 @@
-import {z} from 'zod';
-export const quizSchema=z.object({title:z.string().min(2).max(200),description:z.string().max(2000).optional(),subject:z.string().max(120).optional(),department:z.string().max(120).optional(),year:z.number().int().min(1).max(10).optional(),difficulty:z.enum(['EASY','MEDIUM','HARD']).optional(),timeLimit:z.number().int().positive().max(86400).optional(),leaderboardEnabled:z.boolean().optional()});
-export const questionSchema=z.object({questionText:z.string().min(1).max(2000),questionType:z.enum(['MULTIPLE_CHOICE','TRUE_FALSE']),points:z.number().int().positive().max(1000),timeLimit:z.number().int().positive().max(3600).optional(),explanation:z.string().max(2000).optional(),options:z.array(z.object({optionText:z.string().min(1).max(500),isCorrect:z.boolean(),order:z.number().int().min(0)})).min(2).max(10)});
-export const joinSchema=z.object({name:z.string().min(2).max(80),collegeId:z.string().max(80).optional()});

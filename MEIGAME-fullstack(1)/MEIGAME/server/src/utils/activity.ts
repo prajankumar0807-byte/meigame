@@ -1,2 +1,0 @@
-import {prisma} from '../config/prisma.js';
-export async function logActivity(input:{userId?:string;action:string;targetType?:string;targetId?:string;metadata?:unknown;ipAddress?:string;userAgent?:string}){await prisma.activityLog.create({data:{userId:input.userId,action:input.action,targetType:input.targetType,targetId:input.targetId,metadata:input.metadata as any,ipAddress:input.ipAddress,userAgent:input.userAgent}})}
