@@ -1,1 +1,0 @@
-import {Card} from '../components/UI'; export function MyResults(){return <><header className="topbar"><div><span className="eyebrow">HISTORY</span><h1>My results</h1></div></header><Card><h2>No results yet</h2><p className="muted">Results from authenticated quiz activity will appear here.</p></Card></>}

@@ -1,2 +1,0 @@
-import {Server} from 'socket.io'; import {Server as HttpServer} from 'node:http'; import {env} from '../config/env.js';
-export function attachSockets(http:HttpServer){const io=new Server(http,{cors:{origin:env.CLIENT_URL,credentials:true}});io.on('connection',socket=>{socket.on('quiz:host:join',(quizId:string)=>socket.join(`quiz:${quizId}`));socket.on('quiz:participant:join',(quizId:string)=>socket.join(`quiz:${quizId}`));});return io;}
